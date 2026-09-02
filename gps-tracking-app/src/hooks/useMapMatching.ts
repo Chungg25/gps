@@ -19,8 +19,14 @@ export function useMapMatching(rawRoute: GpsPoint[], profile: ProfileType, isTra
 
     const interval = setInterval(async () => {
       const startIndex = lastMatchedIndexRef.current;
-      const currentRoute = rawRouteRef.current;
-      const segment = currentRoute.slice(startIndex);
+      const MAX_POINTS_PER_REQUEST = 60; // Gửi tối đa khoảng 60 điểm (tương đương 3-5 phút chạy xe) mỗi lần
+      let segment = currentRoute.slice(startIndex);
+      
+      // Nếu tích tụ quá nhiều (do mất mạng 3G lâu), ta băm nhỏ ra, chỉ giải quyết 60 điểm một lần.
+      // Các điểm dư sẽ được vòng lặp 30s tiếp theo giải quyết tiếp.
+      if (segment.length > MAX_POINTS_PER_REQUEST) {
+        segment = segment.slice(0, MAX_POINTS_PER_REQUEST);
+      }
       
       if (segment.length < 2) return;
 
@@ -40,19 +46,17 @@ export function useMapMatching(rawRoute: GpsPoint[], profile: ProfileType, isTra
             }
           });
 
-          // Nối đoạn đường vừa nắn thành công vào tổng đoạn đường
           setMatchedRoute((prev) => [...prev, ...segmentMatchedRoute]);
           
-          // Cập nhật lại chốt chặn, lùi lại 1 điểm để đoạn nối tiếp theo có sự liền mạch
-          lastMatchedIndexRef.current = currentRoute.length > 0 ? currentRoute.length - 1 : 0;
+          // Đẩy chốt chặn tới cuối của cái chunk vừa được xử lý (trừ 1 để giữ điểm nối)
+          lastMatchedIndexRef.current = startIndex + segment.length - 1;
         }
       } catch (error: any) {
         console.error("Map matching failed", error);
         
-        // Nếu Valhalla báo lỗi 400 (do GPS mất sóng nhảy quá xa không thể nắn được)
-        // Chúng ta bắt buộc phải đẩy chốt chặn qua khỏi đoạn lỗi này để không bị kẹt vĩnh viễn.
         if (error.response && error.response.status === 400) {
-          lastMatchedIndexRef.current = currentRoute.length > 0 ? currentRoute.length - 1 : 0;
+          // Chỉ đẩy chốt chặn qua phần chunk bị lỗi 400, không đẩy hết
+          lastMatchedIndexRef.current = startIndex + segment.length - 1;
         }
       }
     }, 30000); // 30 seconds
