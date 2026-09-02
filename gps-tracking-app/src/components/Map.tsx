@@ -24,10 +24,19 @@ function RecenterMap({ rawRoute }: { rawRoute: GpsPoint[] }) {
   const map = useMap();
   
   useEffect(() => {
-    // Kích hoạt cập nhật kích thước bản đồ để sửa lỗi màn hình xám
+    // Sửa lỗi màn hình xám bằng cách theo dõi kích thước container liên tục
+    const observer = new ResizeObserver(() => {
+      map.invalidateSize();
+    });
+    
+    observer.observe(map.getContainer());
+    
+    // Kích hoạt ngay lập tức 1 lần
     setTimeout(() => {
       map.invalidateSize();
-    }, 250);
+    }, 100);
+
+    return () => observer.disconnect();
   }, [map]);
 
   useEffect(() => {
@@ -41,8 +50,8 @@ function RecenterMap({ rawRoute }: { rawRoute: GpsPoint[] }) {
 }
 
 export default function Map({ rawRoute, matchedRoute }: MapProps) {
-  // Default to center of Vietnam
-  const defaultCenter: [number, number] = [14.0583, 108.2772];
+  // Mặc định hiển thị trung tâm TP.HCM (Quận 1) thay vì tọa độ cũ (nằm giữa rừng)
+  const defaultCenter: [number, number] = [10.7769, 106.7009];
   const center: [number, number] = rawRoute.length > 0 
     ? [rawRoute[rawRoute.length - 1].lat, rawRoute[rawRoute.length - 1].lon] 
     : defaultCenter;
@@ -56,8 +65,8 @@ export default function Map({ rawRoute, matchedRoute }: MapProps) {
       style={{ height: "100%", width: "100%", zIndex: 0 }}
     >
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        attribution='&copy; Google Maps'
+        url="https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"
       />
       
       {/* Raw GPS Route (Red, dashed) */}
