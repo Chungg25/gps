@@ -7,19 +7,23 @@ export function useMapMatching(rawRoute: GpsPoint[], profile: ProfileType, isTra
   const [matchedRoute, setMatchedRoute] = useState<[number, number][]>([]);
   const lastMatchedIndexRef = useRef(0);
 
+  const rawRouteRef = useRef(rawRoute);
+
+  // Luôn cập nhật ref bằng giá trị mới nhất của rawRoute để interval không bị reset
+  useEffect(() => {
+    rawRouteRef.current = rawRoute;
+  }, [rawRoute]);
+
   useEffect(() => {
     if (!isTracking) return;
 
     const interval = setInterval(async () => {
-      // We need at least 2 new points to match a meaningful segment, 
-      // or we just send the whole route if it's small enough.
-      // For simplicity in this demo, we send the entire accumulated route
-      // so Valhalla has full context to snap to the road.
-      if (rawRoute.length < 2) return;
+      const currentRoute = rawRouteRef.current;
+      if (currentRoute.length < 2) return;
 
       try {
         const response = await axios.post("/api/trace", {
-          route: rawRoute,
+          route: currentRoute,
           profile,
         });
 
@@ -41,7 +45,8 @@ export function useMapMatching(rawRoute: GpsPoint[], profile: ProfileType, isTra
     }, 30000); // 30 seconds
 
     return () => clearInterval(interval);
-  }, [rawRoute, profile, isTracking]);
+  }, [profile, isTracking]); // Đã bỏ rawRoute ra khỏi mảng dependency để interval không bị reset liên tục
+
 
   const clearMatchedRoute = () => {
     setMatchedRoute([]);

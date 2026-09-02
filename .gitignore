@@ -1,0 +1,9 @@
+# Bỏ qua thư mục chứa dữ liệu bản đồ khổng lồ (300MB+) để tránh lỗi khi push lên Github
+valhalla_data/
+
+# Bỏ qua các file cài đặt của hệ điều hành
+.DS_Store
+Thumbs.db
+
+# Nếu bạn có cài node_modules ở ngoài thư mục gốc
+node_modules/
