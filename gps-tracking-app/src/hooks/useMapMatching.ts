@@ -19,6 +19,7 @@ export function useMapMatching(rawRoute: GpsPoint[], profile: ProfileType, isTra
 
     const interval = setInterval(async () => {
       const startIndex = lastMatchedIndexRef.current;
+      const currentRoute = rawRouteRef.current;
       const MAX_POINTS_PER_REQUEST = 60; // Gửi tối đa khoảng 60 điểm (tương đương 3-5 phút chạy xe) mỗi lần
       let segment = currentRoute.slice(startIndex);
       
