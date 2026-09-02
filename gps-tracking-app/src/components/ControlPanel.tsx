@@ -83,7 +83,7 @@ export default function ControlPanel({
         </div>
         <div className="flex items-center gap-2 mt-1">
           <div className="w-3 h-1 bg-green-500"></div>
-          <span>GPS Đã nắn (Valhalla)</span>
+          <span>GPS Đã nắn</span>
         </div>
       </div>
     </div>
